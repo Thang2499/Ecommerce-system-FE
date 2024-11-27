@@ -1,22 +1,27 @@
 import React, { useState } from 'react'
 import { useUser } from '../context/UserContext'
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 const HomeChild = ({items}) => {
+  const authStore = useSelector(state => state.auth);
+  console.log(authStore.user._id)
     const {productName,image,price,_id} = items
     const [quantity,setQuantity] = useState(1)
-    const user = useUser();
+    // const user = useUser();
+    // const {user} = a
     const addWishList = async (event) =>{
       event.preventDefault();
       try {
           const res = await axios.post('http://localhost:8080/users/wishList',{
-            id: user.user._id,
+            id: authStore.user._id,
             wishlist: [{ productId: _id }],
           },
             {
                headers: {
               'Content-Type': 'application/json',
+              authorization: `Bearer ${authStore.accessToken}`
             },
-            withCredentials: true,
+            // withCredentials: true,
             } )
           console.log(res)
         } catch (err) {
@@ -27,7 +32,7 @@ const HomeChild = ({items}) => {
       event.preventDefault();
       try {
           const res = await axios.post('http://localhost:8080/users/addToCart',{
-               id: user.user._id, 
+               id: authStore.user._id, 
                 productId: _id, 
                 quantity: quantity, 
                 unitPrice: price, 
@@ -35,10 +40,10 @@ const HomeChild = ({items}) => {
             {
                headers: {
               'Content-Type': 'application/json',
+              Authorization: `Bearer ${authStore.accessToken}`
             },
-            withCredentials: true,
             } )
-          console.log(res)
+          console.log(res.data)
         } catch (err) {
           console.log(err);
         }

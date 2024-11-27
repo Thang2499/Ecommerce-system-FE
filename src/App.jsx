@@ -9,8 +9,31 @@ import { UserProvider } from './context/UserContext';
 import ShopManage from './shop/shopManage';
 import ProductManage from './shop/productManage';
 import AddProductForm from './componentChild/Shop/AddProductForm';
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect } from 'react';
+import { login, logout } from './store/authSlice';
 function App() {
+const authStore = useSelector(state => state.auth);
+const dispatch = useDispatch();
+useEffect(()=>{
+  try {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    const user = JSON.parse(localStorage.getItem('user'));
+    if(!user || !accessToken || !refreshToken){
+      dispatch(logout())
+    }
+    dispatch(login({
+      accessToken,refreshToken,user
+    }))
+  } catch (error) {
+     dispatch(logout())
+  }
+},[])
 
+if(authStore.isLoading){
+  return <div>Loading...</div>
+}
   return (
     <>
       <UserProvider>

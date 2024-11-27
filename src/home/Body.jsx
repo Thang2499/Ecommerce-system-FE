@@ -23,15 +23,13 @@ const Body = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios({
-          url: 'http://localhost:8080/users/list',
-          method: 'GET',
+        const res = await axios.get( 'http://localhost:8080/users/list',{
           headers: {
             'Content-Type': 'application/json'
-          },
-          params: query,
-          withCredentials: true,
-        },
+          }},{
+            params: query,
+            // withCredentials: true,
+          }
         )
         setData(res.data)
       } catch (err) {

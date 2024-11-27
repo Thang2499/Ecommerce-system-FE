@@ -1,39 +1,102 @@
-import React from 'react'
-import { Link } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../store/authSlice';
 
 const Header = () => {
-  const { user } = useUser();
+  const authStore = useSelector(state => state.auth);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const navigate = useNavigate();
+  const dispatch = useDispatch()
+  // const { user } = useUser();
+  const toggleMenu = () => setMenuOpen((prev) => !prev);
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth', // Sử dụng 'smooth' để tạo hiệu ứng cuộn mượt
+      behavior: 'smooth',
     });
   };
+  const handleLogout = () => {
+    dispatch(logout());
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    navigate('/')
+  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   return (
     <>
       <div className='flex justify-around pt-5 pb-5 sticky top-0 bg-black text-zinc-400 z-10 scroll-smooth'>
         <div className=' font-black text-2xl'>
           <Link to='/'><h1>Exclusive</h1></Link>
         </div>
-        <div className='w-1/5 pt-2 '>
-          <ul className='list-none flex justify-between cursor-pointer'>
-            <Link to='/' onClick={scrollToTop} className='li-hover'>Home</Link>
-            <li className='li-hover'>Contact</li>
-            <li className='li-hover'>About</li>
-            {user ? <div className='flex justify-between ml-3'>
-              <p className=''>hello {user.name}</p>
-              {user.shopId ?
-                (<Link to='/shop'><p className='text-orange-500'>go to Shop</p></Link>)
-                : null}
-            </div>
-              :
-              <div className=''>
-                <Link to='/signup' className=''>Sign Up</Link>
-                <Link to='/login' className='ml-4'>Log in</Link>
-              </div>
-            }
+        <div className='w-1/2 pt-2 '>
+          <ul className="list-none flex justify-between cursor-pointer w-4/5">
+            <Link to="/" onClick={scrollToTop} className="li-hover">
+              Home
+            </Link>
+            <li className="li-hover">Contact</li>
+            <li className="li-hover">About</li>
+            {authStore.isAuth ? (
+          <div className="relative flex items-center space-x-4">
+  
+            <button
+              onClick={toggleMenu}
+              className="text-blue-500 font-medium hover:underline"
+            >
+              Hello, {authStore.user?.name || 'User'}
+            </button>
 
+            {menuOpen && (
+              <div  ref={menuRef} className="absolute top-full mt-2 w-36 bg-white border rounded-md shadow-lg z-50">
+                <ul className="py-2">
+                  <li>
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      onClick={() => setMenuOpen(false)} 
+                    >
+                      Quản lý Profile
+                    </Link>
+                  </li>
+                  <li>
+                    <button
+                          onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                    >
+                      Log out
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {authStore.user?.shopId && (
+              <Link to="/shop" className="text-orange-500 hover:underline">
+                Go to Shop
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="flex space-x-4">
+            <Link to="/signup" className="hover:underline">
+              Sign Up
+            </Link>
+            <Link to="/login" className="hover:underline">
+              Log in
+            </Link>
+          </div>
+        )}
           </ul>
         </div>
         {/* <div className='flex w-96' > */}

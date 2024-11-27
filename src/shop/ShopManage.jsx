@@ -1,22 +1,27 @@
+import axios from 'axios';
 import React, { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 const ShopManage = () => {
-    const [shop,setShop] = useState({})
+    const [shop,setShop] = useState({});
+    const authStore = useSelector(state => state.auth);
+    // console.log(authStore)
     const getShop = async () =>{
         try{
-            const response = await fetch('http://localhost:8080/shop/shop/shopPage',{
-              method: 'GET',
+            const response = await axios.get('http://localhost:8080/shop/shop/shopPage',{
               headers: {
                 'Content-Type': 'application/json',
+                 authorization: `Bearer ${authStore.accessToken}`
               },
-               credentials: 'include'
+              //  credentials: 'include'
             });
-            if(!response.ok){
-              const errorData = await response.json();
-              console.error('Error details:', errorData);
+            if(response.status !== 200){
+              // const errorData = await response;
+              // console.error('Error details:', errorData);
               throw new Error('đăng nhập thất bại');
             }
-            const data = await response.json();
+              //  console.log(response)
+            const data = await response.data;
             setShop(data);
           }catch(err){
             console.error(err);
@@ -31,9 +36,6 @@ const ShopManage = () => {
     <div>
       {shop.shopInfo ? (
         <>
-          {/* <p>{shop.shopInfo.name}</p>
-          <p>{shop.shopInfo.email}</p>
-          <p>{shop.shopInfo.phone}</p> */}
           <div className='profile  mt-4'>
      <h1 className='h-12 ml-5 text-red-500 font-semibold'>Edit Your Profile</h1>
      <div  className='flex justify-around w-full h-24'>

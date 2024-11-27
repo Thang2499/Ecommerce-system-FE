@@ -6,12 +6,12 @@ const ListProduct = React.memo(({ items }) => {
   const [isFormVisibleImg, setIsFormVisibleImg] = useState(true);
   const [imgId, setImgId] = useState(null);
   const [files, setFiles] = useState(null);
-  const [file, setFile] = useState(null);
+  // const [file, setFile] = useState(null);
   const [idProduct, setIdProduct] = useState({});
   const [name, setName] = useState(productName);
   const [priceProduct, setPriceProduct] = useState(price);
   const [categoryProduct, setCategoryProduct] = useState(category);
-  console.log(files)
+  // console.log(files)
   const handleEdit = (event) => {
     event.preventDefault();
     setIsFormVisible(!isFormVisible)
@@ -35,6 +35,7 @@ const ListProduct = React.memo(({ items }) => {
     formData.append('imageUrlsToDelete', JSON.stringify(imgId));
     const url = new URL('http://localhost:8080/shop/shop/updateProduct');
     url.searchParams.append('id', _id);
+    // console.log(file)
     if (files) {
       for (let i = 0; i < files.length; i++) {
         formData.append('files', files[i]);

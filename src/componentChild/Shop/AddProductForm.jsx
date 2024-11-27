@@ -6,18 +6,15 @@ const AddProductForm = () => {
     const [productName, setProductName] = useState('');
     const [category, setCategory] = useState('');
     const [price, setPrice] = useState('');
-    const [files, setFiles] = useState(null); // Lưu trữ file
+    const [files, setFiles] = useState(null); 
 
     const handleAddProduct = async (event) => {
         event.preventDefault();
 
-        // Tạo một đối tượng FormData
         const formData = new FormData();
         formData.append('productName', productName);
         formData.append('category', category);
         formData.append('price', price);
-
-        // Thêm các file vào FormData
         if (files) {
             for (let i = 0; i < files.length; i++) {
                 formData.append('files', files[i]); 
@@ -28,7 +25,7 @@ const AddProductForm = () => {
             const response = await fetch('http://localhost:8080/shop/shop/addProduct', {
                 method: 'POST',
                 credentials: 'include',
-                body: formData, // Gửi FormData
+                body: formData, 
             });
 
             if (!response.ok) {
@@ -39,7 +36,7 @@ const AddProductForm = () => {
 
             const data = await response.json();
             console.log('Product added successfully:', data);
-            navigate('/productManage'); // Điều hướng sau khi thêm thành công
+            navigate('/productManage'); 
         } catch (err) {
             console.error('Error adding product:', err);
         }
@@ -51,7 +48,7 @@ const AddProductForm = () => {
                 type="file"
                 name="files"
                 multiple
-                onChange={(e) => setFiles(e.target.files)} // Lưu trữ file được chọn
+                onChange={(e) => setFiles(e.target.files)}
             />
             <input
                 type="text"

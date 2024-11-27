@@ -1,40 +1,49 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
-import login from '../image/login-signup.png'
+import logins from '../image/login-signup.png'
+import { useDispatch, useSelector } from 'react-redux';
+import { login, setLoading } from '../store/authSlice';
+import axios from 'axios';
 const Login = () => {
-  const {setUser} = useUser();
+  const authStore = useSelector(state => state.auth);
+  const dispatch = useDispatch();
+  // const {setUser} = useUser();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const handleLogin = async (e)=>{
     e.preventDefault();
     try{
-      const response = await fetch('http://localhost:8080/users/login',{
-        method: 'POST',
-        headers: {
-          'Content-Type' : 'application/json'
-        },
-         credentials: 'include',
-        body: JSON.stringify({email,password})
+    dispatch(setLoading(true))
+      const response = await axios.post('http://localhost:8080/users/login',{
+        //  credentials: 'include',
+      email,password
       });
-      if(!response.ok){
-        throw new Error('đăng nhập thất bại');
+      if (response.status !== 200) {
+        throw new Error('Đăng nhập thất bại');
       }
-      const data = await response.json();
-      // console.log('đăng nhập thành công',data);
-      setUser(data.user);
-      // console.log(data.user.name)
+      // setUser(response.data.user);
+      dispatch(login({
+        user:response.data.user,
+        accessToken:response.data.accessToken,
+        refreshToken: response.data.refreshToken
+      }))
+      localStorage.setItem('accessToken',response.data.accessToken);
+      localStorage.setItem('refreshToken',response.data.refreshToken);
+      localStorage.setItem('user',JSON.stringify(response.data.user));
       navigate('/');
     }catch(err){
-      console.error(err);
+      console.error(err.message);
+    }finally{
+      dispatch(setLoading(false))
     }
   }
   return (
     <>
       <div className=' flex border-t-2 w-full'>
       <div className='h-lvh w-1/2'>
-        <img className='h-5/6 mt-16 w-full ' src={login} alt="" />
+        <img className='h-5/6 mt-16 w-full ' src={logins} alt="" />
       </div>
       <div onSubmit={handleLogin} className='mt-16 pl-48 w-2/4'>
         <form className='h-96 mt-20'>
