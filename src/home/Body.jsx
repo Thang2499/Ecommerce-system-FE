@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import HomeChild from '../componentChild/homeChild';
-// import '../componentChild/homeChild.css'
+import axiosInstance from '../jwt/refreshAccessToken';
 const Body = () => {
   const [data, setData] = useState([])
-  const [query, setQuery] = useState({ page: 1, limit: 10 });
+  const [query, setQuery] = useState({ page: 1, limit: 20 });
   const moveToLeft = () => {
     if (query.page === 1) return
     setQuery(pre => ({
@@ -23,15 +23,12 @@ const Body = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get( 'http://localhost:8080/users/list',{
-          headers: {
-            'Content-Type': 'application/json'
-          }},{
+        const res = await axiosInstance.get( '/users/list',{
             params: query,
             // withCredentials: true,
           }
         )
-        setData(res.data)
+        setData(res.data);
       } catch (err) {
         console.log(err);
       }
@@ -41,7 +38,7 @@ const Body = () => {
   return (
     <>
      <div className='mt-12'>
-        {data ? (<div className='grid grid-cols-5 gap-5 ml-48'>{data.map(item => (<HomeChild key={item.id} items={item} />))}</div>) : <p>Loading</p>}
+        {data ? (<div className='grid grid-cols-5 gap-5 ml-40 mr-40'>{data.map(item => (<HomeChild key={item._id} items={item} />))}</div>) : <p>Loading</p>}
       </div>
       <div className="flex items-center justify-center gap-4 mt-6">
         <button
@@ -62,9 +59,6 @@ const Body = () => {
           Right
         </button>
       </div>
-
-
-     
     </>
   )
 }

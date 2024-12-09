@@ -1,6 +1,11 @@
+import axios from 'axios';
 import React, { useState } from 'react'
-
+import { useSelector } from 'react-redux';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import axiosInstance from '../../jwt/refreshAccessToken';
 const ListProduct = React.memo(({ items }) => {
+  const authStore = useSelector(state => state.auth);
   const { productName, imageDetail, category, price, image, _id } = items
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [isFormVisibleImg, setIsFormVisibleImg] = useState(true);
@@ -24,10 +29,9 @@ const ListProduct = React.memo(({ items }) => {
     setIsFormVisibleImg(!isFormVisibleImg);
     setImgId(image)
   }
-  
+
   const handleUpdateProduct = async (event) => {
     event.preventDefault();
-
     const formData = new FormData();
     formData.append('productName', name);
     formData.append('category', categoryProduct);
@@ -35,47 +39,75 @@ const ListProduct = React.memo(({ items }) => {
     formData.append('imageUrlsToDelete', JSON.stringify(imgId));
     const url = new URL('http://localhost:8080/shop/shop/updateProduct');
     url.searchParams.append('id', _id);
-    // console.log(file)
+
     if (files) {
       for (let i = 0; i < files.length; i++) {
         formData.append('files', files[i]);
       }
     }
-    // if (file) {
-    //   formData.append('file', file);
-    // }
+
     try {
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      },
-      );
+      const response = await axios.post(url.toString(),
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            authorization: `Bearer ${authStore.accessToken}`
+          }
+        }
+      )
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.message;
         console.error('Error details:', errorData);
         throw new Error('Failed to add product');
       }
 
-      const data = await response.json();
-      console.log('Product added successfully:', data);
-      // navigate('/productManage'); 
+      const data = await response.data;
+      toast.success('Update success');
+      // console.log('Product added successfully:', data);
+      navigate('/productManage'); 
     } catch (err) {
       console.error('Error adding product:', err);
     }
   };
+  const handleDeleteProduct = async (productId) => {
+    try {
+      const response = await axiosInstance.post('shop/shop/deleteProduct',{productId:productId})
+      if(response.status !== 200) throw new Error('Error')
+        toast.success('Delete success')
+    } catch (error) {
+      console.error('Error delete product:', error);
+    }
+  }
   return (
     <div>
-      <div>
-        {image ? <img className='w-32' src={image} alt="error" /> : ''}
-        <p className='w-32 text-sm'>ProductName: {productName}</p>
-        <p>Price: {price}</p>
-        <div className='flex justify-between w-32 '>
-          <button onClick={handleEdit} className=' h-6 text-center w-16 border rounded-md  shadow-sm bg-blue-500 hover:bg-blue-600 hover:text-white'>Edit</button>
-          <button className=' h-6 text-center w-16 border rounded-md  shadow-sm bg-red-500 hover:bg-red-600 hover:text-white'>Delete</button>
+      <div className="p-4 bg-white shadow-md rounded-lg flex flex-col items-center hover:shadow-2xl text-center space-y-3 ">
+        {/* Hình ảnh */}
+        {image ? (
+          <img className=" object-cover rounded-md transition ease-in-out delay-50 hover:-translate-y-1 hover:scale-110 " src={image} alt="error" />
+        ) : (
+          <div className=" bg-gray-200 flex items-center justify-center text-gray-400">
+            No Image
+          </div>
+        )}
+        <p className="text-sm font-medium text-gray-800 "> {productName}</p>
+        <p className="text-sm p-0 text-gray-600">Price: ${price}</p>
+        <div className="flex justify-between w-full space-x-2">
+          <button
+            onClick={handleEdit}
+            className="w-1/2 h-8 border rounded-md shadow-sm bg-blue-500 text-white hover:bg-blue-600 transition duration-200"
+          >
+            Edit
+          </button>
+          <button
+          onClick={()=>handleDeleteProduct(_id)}
+            className="w-1/2 h-8 border rounded-md shadow-sm bg-red-500 text-white hover:bg-red-600 transition duration-200"
+          >
+            Delete
+          </button>
         </div>
-        {/* {imageDetail.map(images => <img style={{width:'100px', height:'100px'}} src={images}/>)} */}
       </div>
+
       {isFormVisible && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           {/* Background Overlay */}
@@ -117,7 +149,7 @@ const ListProduct = React.memo(({ items }) => {
                 {/* Cập nhật ảnh chính */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700">Image</label>
-                 {!imgId ?  <div className="flex items-center w-1/4 gap-4 relative group">
+                  {!imgId ? <div className="flex items-center w-1/4 gap-4 relative group">
                     <img
                       src={image}
                       alt="Main"
@@ -130,8 +162,8 @@ const ListProduct = React.memo(({ items }) => {
                       Delete
                     </button>
                   </div>
-                :null  
-                }
+                    : null
+                  }
                   <input
                     type="file"
                     name='file'
@@ -146,7 +178,7 @@ const ListProduct = React.memo(({ items }) => {
                   <label className="block text-sm font-medium text-gray-700">Image Detail</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {imageDetail.map((img, index) => (
-                      <div key={index} className="relative group">
+                      <div key={index} className="relative w-4/5 group">
                         <img
                           src={img}
                           alt={`Detail ${index}`}
@@ -166,7 +198,6 @@ const ListProduct = React.memo(({ items }) => {
                       type="file"
                       name='files'
                       multiple
-
                       onChange={(e) => setFiles(e.target.files)}
                       className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 text-sm text-gray-500"
                     />
@@ -194,6 +225,19 @@ const ListProduct = React.memo(({ items }) => {
           </div>
         </div>
       )}
+            <ToastContainer
+      position="top-right"
+      autoClose={1000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="light"
+      transition:Bounce
+/> 
     </div>
   )
 })
